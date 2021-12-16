@@ -15,17 +15,26 @@ class Elves
   end
 
   def propose_to(dwarf_name, score, edm)
+    p score
     @proposed_to.push(dwarf_name)
     if Edm.dwarves[dwarf_name].married == false
+      if @married == true
+        edm.set(Dwarves, @married_to)
+      end
       marry_to(dwarf_name, score)
       Edm.dwarves[dwarf_name].accept_proposal(self.name, score)
     else
-      previous_proposal_by = Edm.dwarves[dwarf_name].married_to
-      previous_proposal_score = Edm.dwarves[dwarf_name].bond
-      if score[0] > previous_proposal_score[0] && score[1] > previous_proposal_score[1]
+      puts previous_proposal_by = Edm.dwarves[dwarf_name].married_to
+      p previous_proposal_score = Edm.dwarves[dwarf_name].bond
+      p score[0] >= previous_proposal_score[0]
+      p score[1] > previous_proposal_score[1]
+      if (score[0] >= previous_proposal_score[0]) && (score[1] > previous_proposal_score[1])
+        if @married == true
+          edm.set(Dwarves, @married_to)
+        end
         marry_to(dwarf_name, score)
-        Edm.dwarves[dwarf_name].accept_proposal(self.name, score)
         edm.set(Elves, previous_proposal_by, Edm.elves[previous_proposal_by].proposed_to)
+        Edm.dwarves[dwarf_name].accept_proposal(self.name, score)
       end
     end
   end
@@ -108,7 +117,7 @@ class Edm
   def score_translate(score)
     if score.include?("L")
       score.split
-      score = "-#{score[0]}".to_i
+      score = "#{score[0]}".to_i*-1
     else
       score.split
       score = "#{score[0]}".to_i
@@ -125,22 +134,6 @@ class Edm
   end
 end
 
-#ave = Elves.new('Ave')
-#duthilia = Dwarves.new('Duthilia')
-
 edm = Edm.new
-edm.import_data('test1')
+edm.import_data('test2')
 edm.debug
-# edm.set(Elves ,'Ave')
-# edm.set(Elves ,'Elegast')
-# edm.set(Dwarves, 'Duthilia')
-# p Edm.elves["Ave"]
-# p Edm.dwarves["Duthilia"]
-# p Edm.elves["Elegast"]
-# puts Edm.elves["Ave"].propose_to(Edm.dwarves["Duthilia"].name, [1, 1], edm)
-# p Edm.elves["Ave"]
-# puts Edm.elves["Elegast"].propose_to(Edm.dwarves["Duthilia"].name, [1,1], edm)
-# p Edm.elves["Ave"]
-# p Edm.elves["Elegast"]
-# p Edm.dwarves["Duthilia"]
-
