@@ -15,23 +15,37 @@ class Elves
   end
 
   def propose_to(dwarf_name, score, edm)
-    p score
+    puts "self bond #{self.bond}"
+    puts "dwarf bond #{Edm.dwarves[dwarf_name].bond}"
     @proposed_to.push(dwarf_name)
     if Edm.dwarves[dwarf_name].married == false && @married == false
       puts 'test'
       marry_to(dwarf_name, score)
       Edm.dwarves[dwarf_name].accept_proposal(@name, score)
-      #solve this error from here
-    else
-      puts 'test2'
-      p Edm.dwarves[dwarf_name]
-      p previous_proposal_by = Edm.dwarves[dwarf_name].married_to
-      p previous_proposal_score = Edm.dwarves[dwarf_name].bond
-      puts @name
-      puts dwarf_name
-      p score[0] >= previous_proposal_score[0]
-      p score[1] > previous_proposal_score[1]
-      if (score[0] >= previous_proposal_score[0]) && (score[1] > previous_proposal_score[1])
+    elsif Edm.dwarves[dwarf_name].married == false && @married == true
+      if (score[0] > self.bond[0]) && (score[1] > self.bond[1])# || ((score[0] > self.bond[0]) && (score[1] >= self.bond[1]))
+        puts "test2"
+        edm.set(Dwarves, @married_to)
+        marry_to(dwarf_name, score)
+        Edm.dwarves[dwarf_name].accept_proposal(self.name, score)
+      end
+    elsif Edm.dwarves[dwarf_name].married == true && @married == false
+      previous_proposal_by = Edm.dwarves[dwarf_name].married_to
+      previous_proposal_score = Edm.dwarves[dwarf_name].bond
+      if (score[1] > previous_proposal_score[1])
+        marry_to(dwarf_name, score)
+        edm.set(Elves, previous_proposal_by, Edm.elves[previous_proposal_by].proposed_to)
+        Edm.dwarves[dwarf_name].accept_proposal(self.name, score)
+      end
+    elsif Edm.dwarves[dwarf_name].married == true && @married == true
+      # if @married == true
+      #   return puts "already married"
+      # end
+      previous_proposal_by = Edm.dwarves[dwarf_name].married_to
+      previous_proposal_score = Edm.dwarves[dwarf_name].bond
+      if ((score[0] > self.bond[0]) && (score[1] > previous_proposal_score[1]))
+      #if ((score[0] >= previous_proposal_score[0]) && (score[1] > previous_proposal_score[1]))# || ((score[0] > previous_proposal_score[0]) && (score[1] >= previous_proposal_score[1]))
+        puts "test3"
         if @married == true
           edm.set(Dwarves, @married_to)
         end
@@ -119,11 +133,11 @@ class Edm
 
   def score_translate(score)
     if score.include?("L")
-      score.split
-      score = "#{score[0]}".to_i*-1
+      score = score.gsub("L", "")
+      score = score.to_i * -1
     else
-      score.split
-      score = "#{score[0]}".to_i
+      score = score.gsub("R", "")
+      score = score.to_i
     end
   end
 
