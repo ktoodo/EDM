@@ -1,0 +1,16 @@
+Elves: Ave, Elegast, Taeriel, Saeya, Loralf
+Dwarves: Duthila, Mondull, Boltor, Drummer
+Ave : Duthila = 1R x 4R
+Elegast : Duthila = 1R x 1R
+Taeriel : Duthila = 1L x 3L
+Saeya : Duthila = 2R x 1L
+Loralf : Duthila = 1R x 2R
+Taeriel : Mondull = 1R x 3R
+Elegast : Mondull = 1R x 5R
+Taeriel : Boltor = 1R x 1R
+Loralf : Boltor = 1R x 1R
+Loralf : Drummer = 1R x 1R
+Loralf : Mondull = 2R x 2R
+Elegast : Boltor = 1R x 10R
+Saeya : Mondull = 1L x 1L
+Saeya : Boltor = 1R x 1L
