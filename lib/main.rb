@@ -17,15 +17,18 @@ class Elves
   def propose_to(dwarf_name, score, edm)
     p score
     @proposed_to.push(dwarf_name)
-    if Edm.dwarves[dwarf_name].married == false
-      if @married == true
-        edm.set(Dwarves, @married_to)
-      end
+    if Edm.dwarves[dwarf_name].married == false && @married == false
+      puts 'test'
       marry_to(dwarf_name, score)
-      Edm.dwarves[dwarf_name].accept_proposal(self.name, score)
+      Edm.dwarves[dwarf_name].accept_proposal(@name, score)
+      #solve this error from here
     else
-      puts previous_proposal_by = Edm.dwarves[dwarf_name].married_to
+      puts 'test2'
+      p Edm.dwarves[dwarf_name]
+      p previous_proposal_by = Edm.dwarves[dwarf_name].married_to
       p previous_proposal_score = Edm.dwarves[dwarf_name].bond
+      puts @name
+      puts dwarf_name
       p score[0] >= previous_proposal_score[0]
       p score[1] > previous_proposal_score[1]
       if (score[0] >= previous_proposal_score[0]) && (score[1] > previous_proposal_score[1])
