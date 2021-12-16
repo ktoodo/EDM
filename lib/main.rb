@@ -79,27 +79,68 @@ class Edm
   def self.dwarves
     @@dwarves
   end
+
+  def import_data(file)
+    fname = "Tests/#{file}"
+    File.foreach(fname) do |line| 
+      if line.start_with?('Elves: ')
+        line = line.gsub(/,/, '').split()
+        line -= ['Elves:']
+        line.each {|elf| set(Elves, elf)}
+      elsif line.start_with?('Dwarves: ')
+        line = line.gsub(/,/, '').split()
+        line -= ['Dwarves:']
+        line.each {|dwarf| set(Dwarves, dwarf)}
+      else
+        line = line.gsub(/[:=x]/, "").squeeze(" ").split
+        elf = line[0]
+        dwarf = line[1]
+        score = []
+        score << score_translate(line[2])
+        score << score_translate(line[3])
+        puts "#{elf} and #{dwarf} and #{score}"
+        p @@elves[elf].propose_to(dwarf, score, self)
+      end
+    end
+    print_result
+  end
+
+  def score_translate(score)
+    if score.include?("L")
+      score.split
+      score = "-#{score[0]}".to_i
+    else
+      score.split
+      score = "#{score[0]}".to_i
+    end
+  end
+
+  def print_result
+    @@elves.each {|key, elf| p "#{elf.name} : #{elf.married_to}" if elf.married}
+  end
+
+  def debug
+    @@elves.each {|key, elf| p elf}
+    @@dwarves.each {|key, dwarf| p dwarf}
+  end
 end
 
 #ave = Elves.new('Ave')
 #duthilia = Dwarves.new('Duthilia')
 
 edm = Edm.new
-edm.set(Elves ,'Ave')
-edm.set(Elves ,'Elegast')
-edm.set(Dwarves, 'Duthilia')
-#puts Edm.elves["Ave"].name
-#puts Edm.elves["Ave"].marry_to("Eva", "2R")
-#puts Edm.dwarves["Duthilia"].name
-p Edm.elves["Ave"]
-p Edm.dwarves["Duthilia"]
-p Edm.elves["Elegast"]
-puts Edm.elves["Ave"].propose_to(Edm.dwarves["Duthilia"].name, [1, 1], edm)
-p Edm.elves["Ave"]
-#p Edm.elves["Ave"]
-#p Edm.dwarves["Duthilia"]
-puts Edm.elves["Elegast"].propose_to(Edm.dwarves["Duthilia"].name, [0,2], edm)
-p Edm.elves["Ave"]
-p Edm.elves["Elegast"]
-p Edm.dwarves["Duthilia"]
-#puts duthilia.name
+edm.import_data('test1')
+edm.debug
+# edm.set(Elves ,'Ave')
+# edm.set(Elves ,'Elegast')
+# edm.set(Dwarves, 'Duthilia')
+# p Edm.elves["Ave"]
+# p Edm.dwarves["Duthilia"]
+# p Edm.elves["Elegast"]
+# puts Edm.elves["Ave"].propose_to(Edm.dwarves["Duthilia"].name, [1, 1], edm)
+# p Edm.elves["Ave"]
+# puts Edm.elves["Elegast"].propose_to(Edm.dwarves["Duthilia"].name, [1,1], edm)
+# p Edm.elves["Ave"]
+# p Edm.elves["Elegast"]
+# p Edm.dwarves["Duthilia"]
+
