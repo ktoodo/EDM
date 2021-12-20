@@ -1,4 +1,5 @@
 module Marriage
+  #return previous marriage swing scores
   def bond
     @swing_score
   end
@@ -15,20 +16,21 @@ class Elves
   end
 
   def propose_to(dwarf_name, score, edm)
-    puts "self bond #{self.bond}"
-    puts "dwarf bond #{Edm.dwarves[dwarf_name].bond}"
-    @proposed_to.push(dwarf_name)
+    @proposed_to.push(dwarf_name) #remember all dwarves to whom the elf has proposed to
+    #marry if both parties are unmarried
     if Edm.dwarves[dwarf_name].married == false && @married == false
-      puts 'test'
       marry_to(dwarf_name, score)
       Edm.dwarves[dwarf_name].accept_proposal(@name, score)
+    #check if married elf would like new unmarried dwarf more
+    #if true / marry new and unmarry old
     elsif Edm.dwarves[dwarf_name].married == false && @married == true
-      if (score[0] > self.bond[0]) && (score[1] > self.bond[1])# || ((score[0] > self.bond[0]) && (score[1] >= self.bond[1]))
-        puts "test2"
+      if (score[0] > self.bond[0])# && (score[1] > self.bond[1])
         edm.set(Dwarves, @married_to)
         marry_to(dwarf_name, score)
         Edm.dwarves[dwarf_name].accept_proposal(self.name, score)
       end
+    #check if married dwarf would like new unmarried elf more
+    #if true / marry new and unmarry old
     elsif Edm.dwarves[dwarf_name].married == true && @married == false
       previous_proposal_by = Edm.dwarves[dwarf_name].married_to
       previous_proposal_score = Edm.dwarves[dwarf_name].bond
@@ -37,18 +39,13 @@ class Elves
         edm.set(Elves, previous_proposal_by, Edm.elves[previous_proposal_by].proposed_to)
         Edm.dwarves[dwarf_name].accept_proposal(self.name, score)
       end
+    #check if both married partners would like eachother more than their previous partners
     elsif Edm.dwarves[dwarf_name].married == true && @married == true
-      # if @married == true
-      #   return puts "already married"
-      # end
       previous_proposal_by = Edm.dwarves[dwarf_name].married_to
       previous_proposal_score = Edm.dwarves[dwarf_name].bond
+      #check if elf would like the new one more and if the dwarf would like a new partner more than the previous
       if ((score[0] > self.bond[0]) && (score[1] > previous_proposal_score[1]))
-      #if ((score[0] >= previous_proposal_score[0]) && (score[1] > previous_proposal_score[1]))# || ((score[0] > previous_proposal_score[0]) && (score[1] >= previous_proposal_score[1]))
-        puts "test3"
-        if @married == true
-          edm.set(Dwarves, @married_to)
-        end
+        edm.set(Dwarves, @married_to)
         marry_to(dwarf_name, score)
         edm.set(Elves, previous_proposal_by, Edm.elves[previous_proposal_by].proposed_to)
         Edm.dwarves[dwarf_name].accept_proposal(self.name, score)
@@ -88,6 +85,10 @@ class Edm
   @@elves = {}
   @@dwarves = {}
 
+  def initialize
+    import_data('test2') #select file to read in
+  end
+
   def set(race, name, proposed_to = [])
     if race == Elves
       elf = race.new(name, proposed_to)
@@ -108,15 +109,18 @@ class Edm
 
   def import_data(file)
     fname = "Tests/#{file}"
-    File.foreach(fname) do |line| 
+    File.foreach(fname) do |line|
+      #read elves and create instances
       if line.start_with?('Elves: ')
         line = line.gsub(/,/, '').split()
         line -= ['Elves:']
         line.each {|elf| set(Elves, elf)}
+      #read dwarves and create instances
       elsif line.start_with?('Dwarves: ')
         line = line.gsub(/,/, '').split()
         line -= ['Dwarves:']
         line.each {|dwarf| set(Dwarves, dwarf)}
+      #analyze encounters till end of document
       else
         line = line.gsub(/[:=x]/, "").squeeze(" ").split
         elf = line[0]
@@ -124,8 +128,7 @@ class Edm
         score = []
         score << score_translate(line[2])
         score << score_translate(line[3])
-        puts "#{elf} and #{dwarf} and #{score}"
-        p @@elves[elf].propose_to(dwarf, score, self)
+        @@elves[elf].propose_to(dwarf, score, self)
       end
     end
     print_result
@@ -144,13 +147,6 @@ class Edm
   def print_result
     @@elves.each {|key, elf| p "#{elf.name} : #{elf.married_to}" if elf.married}
   end
-
-  def debug
-    @@elves.each {|key, elf| p elf}
-    @@dwarves.each {|key, dwarf| p dwarf}
-  end
 end
 
 edm = Edm.new
-edm.import_data('test2')
-edm.debug
