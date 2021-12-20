@@ -1,13 +1,5 @@
-module Marriage
-  #return previous marriage swing scores
-  def bond
-    @swing_score
-  end
-end
-
 class Elves
   attr_accessor :name, :married, :married_to, :proposed_to, :preferences
-  include Marriage
 
   def initialize(name, proposed_to = [], preferences = {})
     @name = name
@@ -16,55 +8,31 @@ class Elves
     @preferences = preferences
   end
 
-  # def propose_to(dwarf_name, score, edm)
-  #   @proposed_to.push(dwarf_name) #remember all dwarves to whom the elf has proposed to
-  #   #marry if both parties are unmarried
-  #   if Edm.dwarves[dwarf_name].married == false && @married == false
-  #     marry_to(dwarf_name, score)
-  #     Edm.dwarves[dwarf_name].accept_proposal(@name, score)
-  #   #check if married elf would like new unmarried dwarf more
-  #   #if true / marry new and unmarry old
-  #   elsif Edm.dwarves[dwarf_name].married == false && @married == true
-  #     if (score[0] > self.bond[0])# && (score[1] > self.bond[1])
-  #       edm.set(Dwarves, @married_to)
-  #       marry_to(dwarf_name, score)
-  #       Edm.dwarves[dwarf_name].accept_proposal(self.name, score)
-  #     end
-  #   #check if married dwarf would like new unmarried elf more
-  #   #if true / marry new and unmarry old
-  #   elsif Edm.dwarves[dwarf_name].married == true && @married == false
-  #     previous_proposal_by = Edm.dwarves[dwarf_name].married_to
-  #     previous_proposal_score = Edm.dwarves[dwarf_name].bond
-  #     if (score[1] > previous_proposal_score[1])
-  #       marry_to(dwarf_name, score)
-  #       edm.set(Elves, previous_proposal_by, Edm.elves[previous_proposal_by].proposed_to)
-  #       Edm.dwarves[dwarf_name].accept_proposal(self.name, score)
-  #     end
-  #   #check if both married partners would like eachother more than their previous partners
-  #   elsif Edm.dwarves[dwarf_name].married == true && @married == true
-  #     previous_proposal_by = Edm.dwarves[dwarf_name].married_to
-  #     previous_proposal_score = Edm.dwarves[dwarf_name].bond
-  #     #check if elf would like the new one more and if the dwarf would like a new partner more than the previous
-  #     if ((score[0] > self.bond[0]) && (score[1] > previous_proposal_score[1]))
-  #       edm.set(Dwarves, @married_to)
-  #       marry_to(dwarf_name, score)
-  #       edm.set(Elves, previous_proposal_by, Edm.elves[previous_proposal_by].proposed_to)
-  #       Edm.dwarves[dwarf_name].accept_proposal(self.name, score)
-  #     end
-  #   end
-  # end
-
-  def marry_to(name, score)
-    @married = true
-    @married_to = name
-    @swing_score = score
+  def propose_to(dwarf_name, edm)
+    @proposed_to.push(dwarf_name)
+    #marry if both unmarried and have set preference for each other
+    if Edm.dwarves[dwarf_name].preferences.include?(self.name) && Edm.dwarves[dwarf_name].married == false
+      marry_to(dwarf_name)
+      Edm.dwarves[dwarf_name].accept_proposal(@name)
+    elsif Edm.dwarves[dwarf_name].married == true
+      previous_proposal_by = Edm.dwarves[dwarf_name].married_to
+      #marry if have set preference for each other and previous match is weaker + unmarry old match
+      if Edm.dwarves[dwarf_name].preferences.include?(self.name) && Edm.dwarves[dwarf_name].preferences[self.name] > Edm.dwarves[dwarf_name].preferences[previous_proposal_by]
+        edm.set(Elves, previous_proposal_by, Edm.elves[previous_proposal_by].proposed_to, Edm.elves[previous_proposal_by].preferences)
+        marry_to(dwarf_name)
+        Edm.dwarves[dwarf_name].accept_proposal(@name)
+      end
+    end
   end
 
+  def marry_to(name)
+    @married = true
+    @married_to = name
+  end
 end
 
 class Dwarves
   attr_reader :name, :married, :married_to, :preferences
-  include Marriage
 
   def initialize(name, preferences = {})
     @name = name
@@ -72,13 +40,9 @@ class Dwarves
     @preferences = {}
   end
 
-  def consider_proposal(swings, swing_type)
-  end
-
-  def accept_proposal(name, score)
+  def accept_proposal(name)
     @married = true
     @married_to = name
-    @swing_score = score
   end
 end
 
@@ -88,12 +52,15 @@ class Edm
   @@dwarves = {}
 
   def initialize
-    import_data('test1') #select file to read in
+    import_data('test2') #select file to read in
+    match_maker
+    print_result
   end
 
-  def set(race, name, proposed_to = [])
+  #create instance of elf or dwarf
+  def set(race, name, proposed_to = [], preferences = {})
     if race == Elves
-      elf = race.new(name, proposed_to)
+      elf = race.new(name, proposed_to, preferences)
       @@elves[name] = elf
     else
       dwarf = race.new(name)
@@ -130,9 +97,6 @@ class Edm
         score = []
         @@elves[elf].preferences[dwarf] = score_translate(line[2])
         @@dwarves[dwarf].preferences[elf] = score_translate(line[3])
-        #score << score_translate(line[2])
-        #score << score_translate(line[3])
-        #@@elves[elf].propose_to(dwarf, score, self)
       end
     end
   end
@@ -145,6 +109,30 @@ class Edm
       score = score.gsub("R", "")
       score = score.to_i
     end
+  end
+
+  def match_maker
+    loop do
+      #find elves that are unmarried and have still preferences left to propose to
+      unmatched = @@elves.select {|key, elf| (elf.preferences.keys - elf.proposed_to).length > 0 && !elf.married}
+      unmatched.each do |key, elf|
+        unproposed = without(elf.preferences, elf.proposed_to)
+        unless unproposed.empty?
+          elf.propose_to(unproposed.key(unproposed.values.max), self)
+        end
+      end
+      #end if no more matching needed
+      if unmatched.length == 0
+        break
+      end
+    end
+  end
+
+  #return preferences hash that excludes already proposed to keys
+  def without(hash, keys)
+    copy = hash.dup
+    keys.each { |key| copy.delete(key) }
+    copy
   end
 
   def print_result
